@@ -1,52 +1,124 @@
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import tkinter as tk
-import numpy as np
+import math
 
 class ConvexHullApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Convex Hull using Graham Scan")
+    def __init__(self, master):
+        self.master = master
+        self.master.title("Convex Hull - Jarvis March")
+        self.canvas = tk.Canvas(self.master, width=600, height=400, bg="white")
+        self.canvas.pack()
 
         self.points = []
         self.convex_hull = []
 
-        self.fig, self.ax = plt.subplots()
-        self.canvas = FigureCanvasTkAgg(self.fig, master=self.root)
-        self.canvas_widget = self.canvas.get_tk_widget()
-        self.canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-        self.canvas.draw()
+        self.canvas.bind("<Button-1>", self.add_point)
+        self.btn_compute_hull = tk.Button(self.master, text="Compute Convex Hull", command=self.compute_convex_hull)
+        self.btn_compute_hull.pack()
 
-        self.info_label = tk.Label(root, text="Click on the canvas to add points.")
-        self.info_label.pack()
+        self.btn_reset = tk.Button(self.master, text="Reset Graph", command=self.reset_graph)
+        self.btn_reset.pack()
 
-        self.plot_button = tk.Button(root, text="Plot Convex Hull", command=self.plot_convex_hull)
-        self.plot_button.pack()
+        # Draw x and y axes
+        self.canvas.create_line(50, 350, 550, 350, width=2)  # x-axis
+        self.canvas.create_line(50, 350, 50, 50, width=2)     # y-axis
 
-        self.canvas.mpl_connect('button_press_event', self.on_canvas_click)
+        # Label x-axis
+        for i in range(0, 550, 50):
+            self.canvas.create_text(50 + i, 355, text=str(i), anchor="n")
 
-    def on_canvas_click(self, event):
-        x, y = event.xdata, event.ydata
-        if x is not None and y is not None:
+        # Label y-axis
+        for i in range(0, 300, 50):
+            self.canvas.create_text(45, 350 - i, text=str(i), anchor="e")
+
+    def add_point(self, event):
+        x, y = event.x, event.y
+
+        # Check if the point is within the bounds of the graph
+        if 50 <= x <= 550 and 50 <= y <= 350:
+            # Add new point to the list
             self.points.append((x, y))
-            self.ax.plot(x, y, 'bo')
-            self.canvas.draw()
 
-    def plot_convex_hull(self):
+            # Draw x and y axes
+            self.canvas.create_line(50, 350, 550, 350, width=2)  # x-axis
+            self.canvas.create_line(50, 350, 50, 50, width=2)     # y-axis
+
+            # Label x-axis
+            for i in range(0, 550, 50):
+                self.canvas.create_text(50 + i, 355, text=str(i), anchor="n")
+
+            # Label y-axis
+            for i in range(0, 300, 50):
+                self.canvas.create_text(45, 350 - i, text=str(i), anchor="e")
+
+            # Draw convex hull (if available)
+            self.draw_convex_hull()
+
+            # Draw all points
+            for x, y in self.points:
+                self.canvas.create_oval(x - 2, y - 2, x + 2, y + 2, fill="black")
+
+
+    def compute_convex_hull(self):
+    # Clear canvas
+        self.canvas.delete("all")
+
         if len(self.points) < 3:
-            self.info_label.config(text="At least 3 points are required.")
+            # Draw x and y axes
+            self.canvas.create_line(50, 350, 550, 350, width=2)  # x-axis
+            self.canvas.create_line(50, 350, 50, 50, width=2)     # y-axis
+
+            # Label x-axis
+            for i in range(0, 550, 50):
+                self.canvas.create_text(50 + i, 355, text=str(i), anchor="n")
+
+            # Label y-axis
+            for i in range(0, 300, 50):
+                self.canvas.create_text(45, 350 - i, text=str(i), anchor="e")
+
+            # Draw all points
+            for x, y in self.points:
+                self.canvas.create_oval(x - 2, y - 2, x + 2, y + 2, fill="black")
+        else:
+            self.convex_hull = self.graham_scan(self.points)
+            self.draw_convex_hull()
+
+
+    def draw_convex_hull(self):
+        if not self.convex_hull:
             return
 
-        self.info_label.config(text="Calculating Convex Hull...")
-        self.convex_hull = self.graham_scan(self.points)
+        # Draw x and y axes
+        self.canvas.create_line(50, 350, 550, 350, width=2)  # x-axis
+        self.canvas.create_line(50, 350, 50, 50, width=2)     # y-axis
 
-        self.ax.clear()
-        self.ax.plot(*zip(*self.points), 'bo', label='Points')
-        self.ax.plot(*zip(*self.convex_hull, self.convex_hull[0]), 'r-', label='Convex Hull')
-        self.ax.legend()
-        self.canvas.draw()
+        # Label x-axis
+        for i in range(0, 550, 50):
+            self.canvas.create_text(50 + i, 355, text=str(i), anchor="n")
 
-        self.info_label.config(text="Convex Hull Plotted.")
+        # Label y-axis
+        for i in range(0, 300, 50):
+            self.canvas.create_text(45, 350 - i, text=str(i), anchor="e")
+
+        # Draw remaining points
+        for x, y in self.points:
+            self.canvas.create_oval(x - 2, y - 2, x + 2, y + 2, fill="black")
+
+        # Draw convex hull with labels and connect the last and first points
+        for i, point in enumerate(self.convex_hull):
+            x, y = point
+            label = f"{i + 1}"
+            self.canvas.create_text(x, y - 10, text=label, anchor="s", fill="blue")
+            self.canvas.create_oval(x - 3, y - 3, x + 3, y + 3, fill="red")
+
+            if i > 0:
+                prev_point = self.convex_hull[i - 1]
+                self.canvas.create_line(prev_point, point, fill="blue")
+
+        # Connect the last and first points
+        first_point = self.convex_hull[0]
+        self.canvas.create_line(self.convex_hull[-1], first_point, fill="blue")
+
+
 
     def graham_scan(self, points):
         def ccw(p1, p2, p3):
@@ -67,8 +139,30 @@ class ConvexHullApp:
 
         return upper_hull[:-1] + lower_hull[:-1]
 
+    def reset_graph(self):
+        # Clear canvas and reset points and convex hull
+        self.canvas.delete("all")
+        self.points = []
+        self.convex_hull = []
 
-if __name__ == "__main__":
+        # Draw x and y axes
+        self.canvas.create_line(50, 350, 550, 350, width=2)  # x-axis
+        self.canvas.create_line(50, 350, 50, 50, width=2)     # y-axis
+
+        # Label x-axis
+        for i in range(0, 550, 50):
+            self.canvas.create_text(50 + i, 355, text=str(i), anchor="n")
+
+        # Label y-axis
+        for i in range(0, 300, 50):
+            self.canvas.create_text(45, 350 - i, text=str(i), anchor="e")
+
+
+def main():
     root = tk.Tk()
     app = ConvexHullApp(root)
     root.mainloop()
+
+
+if __name__ == "__main__":
+    main()
