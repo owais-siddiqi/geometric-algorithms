@@ -81,11 +81,15 @@ class ConvexHullApp:
         def ccw(p1, p2, p3):
             return (p2[1] - p1[1]) * (p3[0] - p2[0]) - (p2[0] - p1[0]) * (p3[1] - p2[1])
 
-        # Find the lowest point (bottommost point)
+        # Find the bottommost point
         lowest_point = min(points, key=lambda p: (p[1], p[0]))
 
+        # Find the leftmost point among the bottommost points
+        leftmost_bottom_point = min(filter(lambda p: p[1] == lowest_point[1], points), key=lambda p: p[0])
+        lowest_point = leftmost_bottom_point
+
         # Sort points based on polar angle
-        points.sort(key=polar_angle, reverse=True)  # Sort in reverse order
+        points.sort(key=lambda p: (polar_angle(p) + 2 * math.pi) % (2 * math.pi))
 
         upper_hull = []
         for p in points:
@@ -100,6 +104,8 @@ class ConvexHullApp:
             lower_hull.append(p)
 
         return upper_hull[:-1] + lower_hull[:-1]
+
+
 
 if __name__ == "__main__":
     root = tk.Tk()
