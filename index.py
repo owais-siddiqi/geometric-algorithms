@@ -10,22 +10,33 @@ class AlgorithmRunnerApp:
         self.algorithm_var = tk.StringVar()
         self.sub_algorithm_var = tk.StringVar()
 
-        self.algorithm_label = tk.Label(root, text="Select Algorithm:")
-        self.algorithm_label.pack()
+        self.create_widgets()
 
-        self.algorithm_combobox = ttk.Combobox(root, values=["convex_hull", "line_intersection"], textvariable=self.algorithm_var)
-        self.algorithm_combobox.pack()
+    def create_widgets(self):
+        # Main Frame
+        main_frame = ttk.Frame(self.root, padding=(20, 10))
+        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
-        self.sub_algorithm_label = tk.Label(root, text="Select Sub-Algorithm:")
-        self.sub_algorithm_label.pack()
+        # Algorithm Label and Combobox
+        algorithm_label = ttk.Label(main_frame, text="Select Algorithm:")
+        algorithm_label.grid(row=0, column=0, pady=10, sticky=tk.W)
 
-        self.sub_algorithm_combobox = ttk.Combobox(root, values=[], textvariable=self.sub_algorithm_var)
-        self.sub_algorithm_combobox.pack()
+        algorithm_combobox = ttk.Combobox(main_frame, values=["convex_hull", "line_intersection"], textvariable=self.algorithm_var)
+        algorithm_combobox.grid(row=0, column=1, pady=10, padx=10, sticky=tk.W)
 
-        self.run_button = tk.Button(root, text="Run Algorithm", command=self.run_algorithm)
-        self.run_button.pack()
+        # Sub-Algorithm Label and Combobox
+        sub_algorithm_label = ttk.Label(main_frame, text="Select Sub-Algorithm:")
+        sub_algorithm_label.grid(row=1, column=0, pady=10, sticky=tk.W)
 
-        self.algorithm_combobox.bind("<<ComboboxSelected>>", self.update_sub_algorithms)
+        self.sub_algorithm_combobox = ttk.Combobox(main_frame, values=[], textvariable=self.sub_algorithm_var)
+        self.sub_algorithm_combobox.grid(row=1, column=1, pady=10, padx=10, sticky=tk.W)
+
+        # Run Button
+        run_button = ttk.Button(main_frame, text="Run Algorithm", command=self.run_algorithm)
+        run_button.grid(row=2, column=0, columnspan=2, pady=20)
+
+        # Events
+        algorithm_combobox.bind("<<ComboboxSelected>>", self.update_sub_algorithms)
 
     def update_sub_algorithms(self, event):
         main_choice = self.algorithm_var.get()
@@ -37,6 +48,7 @@ class AlgorithmRunnerApp:
         else:
             sub_algorithms = []
 
+        self.sub_algorithm_var.set("")  # Reset sub-algorithm choice
         self.sub_algorithm_combobox["values"] = sub_algorithms
 
     def run_algorithm(self):
@@ -50,17 +62,17 @@ class AlgorithmRunnerApp:
 
     def run_convex_hull(self, sub_algorithm):
         if sub_algorithm == "Brute Force":
-            subprocess.run(["python", "BruteForce.py"])
+            subprocess.run(["python", "D:/Documents/University/Fall_23/Algorithms Project/alpha_algo/BruteForce.py"])
         elif sub_algorithm == "Graham Scan":
-            subprocess.run(["python", "GrahamScan.py"])
+            subprocess.run(["python", "D:/Documents/University/Fall_23/Algorithms Project/alpha_algo/GrahamScan.py"])
         elif sub_algorithm == "Jarvis March":
-            subprocess.run(["python", "JarvisMarch.py"])
+            subprocess.run(["python", "D:/Documents/University/Fall_23/Algorithms Project/alpha_algo/JarvisMarch.py"])
 
     def run_line_intersection(self, sub_algorithm):
         if sub_algorithm == "Parametric":
-            subprocess.run(["python", "Lineintersection_parametric.py"])
+            subprocess.run(["python", "D:/Documents/University/Fall_23/Algorithms Project/alpha_algo/Lineintersection_parametric.py"])
         elif sub_algorithm == "Slope":
-            subprocess.run(["python", "Lineintersection_slope.py"])
+            subprocess.run(["python", "D:/Documents/University/Fall_23/Algorithms Project/alpha_algo/Lineintersection_slope.py"])
 
 if __name__ == "__main__":
     root = tk.Tk()
