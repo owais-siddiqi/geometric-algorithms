@@ -1,11 +1,15 @@
 import tkinter as tk
 from tkinter import ttk
+from ttkthemes import ThemedStyle
 import subprocess
 
 class AlgorithmRunnerApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Algorithm Runner")
+
+        style = ThemedStyle(self.root)
+        style.set_theme("plastik")
 
         self.algorithm_var = tk.StringVar()
         self.sub_algorithm_var = tk.StringVar()
@@ -21,14 +25,14 @@ class AlgorithmRunnerApp:
         algorithm_label = ttk.Label(main_frame, text="Select Algorithm:")
         algorithm_label.grid(row=0, column=0, pady=10, sticky=tk.W)
 
-        algorithm_combobox = ttk.Combobox(main_frame, values=["convex_hull", "line_intersection"], textvariable=self.algorithm_var)
+        algorithm_combobox = ttk.Combobox(main_frame, values=["convex_hull", "line_intersection"], textvariable=self.algorithm_var, state="readonly")
         algorithm_combobox.grid(row=0, column=1, pady=10, padx=10, sticky=tk.W)
 
         # Sub-Algorithm Label and Combobox
         sub_algorithm_label = ttk.Label(main_frame, text="Select Sub-Algorithm:")
         sub_algorithm_label.grid(row=1, column=0, pady=10, sticky=tk.W)
 
-        self.sub_algorithm_combobox = ttk.Combobox(main_frame, values=[], textvariable=self.sub_algorithm_var)
+        self.sub_algorithm_combobox = ttk.Combobox(main_frame, values=[], textvariable=self.sub_algorithm_var, state="readonly")
         self.sub_algorithm_combobox.grid(row=1, column=1, pady=10, padx=10, sticky=tk.W)
 
         # Run Button
