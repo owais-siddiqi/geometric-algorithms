@@ -1,102 +1,148 @@
 import tkinter as tk
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import numpy as np
+import time
 
-class QuickHullVisualizer:
+
+class QuickHullGUI:
     def __init__(self, master):
         self.master = master
-        self.master.title("Quick Hull Visualization")
-        self.canvas = tk.Canvas(master, width=600, height=600, bg="white")
-        self.canvas.pack(expand=tk.YES, fill=tk.BOTH)
+        self.master.title("QuickHull Convex Hull Finder")
+
         self.points = []
-        self.lines = []
+        self.convex_hull = []
 
-        # Bind mouse click event
-        self.canvas.bind("<Button-1>", self.on_click)
+        self.create_widgets()
 
-        # Create a button to start the algorithm
-        self.start_button = tk.Button(master, text="Start Quick Hull", command=self.start_quick_hull)
-        self.start_button.pack()
+    def create_widgets(self):
+        self.canvas_frame = tk.Frame(self.master)
+        self.canvas_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        # Draw axis and set limits
-        self.draw_axis()
+        self.fig = Figure(figsize=(5, 5), dpi=100)
+        self.ax = self.fig.add_subplot(111)
+        self.ax.set_xlim(0, 10)
+        self.ax.set_ylim(0, 10)
+
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self.canvas_frame)
+        self.canvas_widget = self.canvas.get_tk_widget()
+        self.canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        self.canvas.mpl_connect("button_press_event", self.on_click)
+
+        self.clear_button = tk.Button(self.master, text="Clear", command=self.clear_points)
+        self.clear_button.pack(side=tk.BOTTOM)
+
+        self.compute_button = tk.Button(self.master, text="Compute Convex Hull", command=self.compute_convex_hull)
+        self.compute_button.pack(side=tk.BOTTOM)
+
+        self.animating = False
+
+    def clear_points(self):
+        self.points = []
+        self.convex_hull = []
+        self.ax.clear()
+        self.ax.set_xlim(0, 10)
+        self.ax.set_ylim(0, 10)
+        self.canvas.draw()
 
     def on_click(self, event):
-        x, y = event.x, event.y
-        # Check if the point is within the limits
-        if 50 < x < 550 and 50 < y < 550:
-            self.points.append((x, y))
-            self.canvas.create_oval(x - 3, y - 3, x + 3, y + 3, fill="black")
-
-    def start_quick_hull(self):
-        if len(self.points) < 3:
-            print("At least 3 points are required.")
+        if self.animating:
             return
 
-        # Clear previous lines
-        for line in self.lines:
-            self.canvas.delete(line)
+        x, y = event.xdata, event.ydata
+        if x is not None and y is not None:
+            self.points.append((x, y))
+            self.ax.plot(x, y, 'ro')
+            self.canvas.draw()
 
-        # Sort points based on x-coordinate
-        self.points.sort()
+    def compute_convex_hull(self):
+        if self.animating or len(self.points) < 3:
+            return
 
-        # Find convex hull
-        hull_points = self.quick_hull(self.points)
+        self.animating = True
+        self.compute_button.config(state=tk.DISABLED)
+        self.clear_button.config(state=tk.DISABLED)
 
-        # Draw convex hull in steps
-        for i in range(len(hull_points) - 1):
-            self.draw_line_step(hull_points[i], hull_points[i + 1], i * 500)
-        self.draw_line_step(hull_points[-1], hull_points[0], (len(hull_points) - 1) * 500)
+        self.convex_hull = quick_hull(self.points, self.ax)
+        self.plot_convex_hull()
 
-    def quick_hull(self, points):
-        if len(points) <= 1:
-            return points
+    def plot_convex_hull(self):
+        if not self.convex_hull:
+            return
 
-        # Find the leftmost and rightmost points
-        leftmost = points[0]
-        rightmost = points[-1]
+        hull_points = np.array(self.convex_hull + [self.convex_hull[0]])
+        x, y = hull_points[:, 0], hull_points[:, 1]
+        self.ax.plot(x, y, 'g-')
+        self.canvas.draw()
 
-        # Divide the points into two subsets, left and right
-        left_set = [point for point in points if self.orientation(leftmost, rightmost, point) == -1]
-        right_set = [point for point in points if self.orientation(leftmost, rightmost, point) == 1]
+        self.master.after(1000, self.restore_interface)
 
-        # Find the convex hull for the two subsets
-        left_hull = self.quick_hull(left_set)
-        right_hull = self.quick_hull(right_set)
+    def restore_interface(self):
+        self.compute_button.config(state=tk.NORMAL)
+        self.clear_button.config(state=tk.NORMAL)
+        self.animating = False
 
-        # Concatenate the results
-        return [leftmost] + left_hull + [rightmost] + right_hull
 
-    @staticmethod
-    def orientation(p, q, r):
+def quick_hull(points, ax):
+    def get_orientation(p, q, r):
         val = (q[1] - p[1]) * (r[0] - q[0]) - (q[0] - p[0]) * (r[1] - q[1])
         if val == 0:
-            return 0
-        return 1 if val > 0 else -1
+            return 0  # Collinear
+        return 1 if val > 0 else 2  # Clockwise or counterclockwise
 
-    def draw_line_step(self, p, q, delay):
-        x1, y1 = p
-        x2, y2 = q
-        line = self.canvas.create_line(x1, y1, x2, y2, fill="red", state=tk.HIDDEN)
-        self.lines.append(line)
-        self.master.after(delay, lambda: self.show_line(line))
+    def hull_recursive(points, p, q, hull_set):
+        max_dist = 0
+        farthest_point = None
+        for r in points:
+            d = get_orientation(p, q, r)
+            if d == 2:
+                dist = (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])
+                if dist > max_dist:
+                    max_dist = dist
+                    farthest_point = r
 
-    def show_line(self, line):
-        self.canvas.itemconfig(line, state=tk.NORMAL)
+        if farthest_point is not None:
+            hull_recursive(points, p, farthest_point, hull_set)
+            hull_set.append(farthest_point)
+            hull_recursive(points, farthest_point, q, hull_set)
 
-    def draw_axis(self):
-        # Draw x-axis with scale
-        for i in range(50, 551, 50):
-            self.canvas.create_line(i, 550, i, 570)
-            self.canvas.create_text(i, 580, text=str(i-50), anchor=tk.N)
+            hull_points = np.array(hull_set + [hull_set[0]])
+            x, y = hull_points[:, 0], hull_points[:, 1]
+            ax.plot(x, y, 'g-')
+            ax.set_xlim(0, 10)
+            ax.set_ylim(0, 10)
+            ax.figure.canvas.draw()
+            time.sleep(0.5)
 
-        # Draw y-axis with scale
-        for i in range(50, 551, 50):
-            self.canvas.create_line(50, i, 70, i)
-            self.canvas.create_text(30, i, text=str(550-i), anchor=tk.E)
+    points.sort()
+    if len(points) < 3:
+        return points
+
+    hull = []
+    hull.append(points[0])
+    hull.append(points[-1])
+
+    upper_hull = []
+    lower_hull = []
+    for point in points:
+        orientation = get_orientation(hull[0], hull[-1], point)
+        if orientation == 2:
+            upper_hull.append(point)
+        elif orientation == 1:
+            lower_hull.append(point)
+
+    hull_recursive(upper_hull, hull[0], hull[-1], hull)
+    hull_recursive(lower_hull, hull[-1], hull[0], hull)
+
+    return hull
+
 
 def main():
     root = tk.Tk()
-    app = QuickHullVisualizer(root)
+    app = QuickHullGUI(root)
     root.mainloop()
+
 
 if __name__ == "__main__":
     main()
