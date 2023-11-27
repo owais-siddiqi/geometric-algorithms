@@ -46,7 +46,7 @@ class AlgorithmRunnerApp:
         main_choice = self.algorithm_var.get()
 
         if main_choice == "convex_hull":
-            sub_algorithms = ["Brute Force", "Graham Scan", "Jarvis March"]
+            sub_algorithms = ["Brute Force", "Graham Scan", "Jarvis March", "Quick Hull","Monotone Chain"]
         elif main_choice == "line_intersection":
             sub_algorithms = ["Parametric", "Slope", "CCW"]
         else:
@@ -71,14 +71,18 @@ class AlgorithmRunnerApp:
             subprocess.run(["python", "D:/Documents/University/Fall_23/Algorithms Project/alpha_algo/GrahamScan.py"])
         elif sub_algorithm == "Jarvis March":
             subprocess.run(["python", "D:/Documents/University/Fall_23/Algorithms Project/alpha_algo/JarvisMarch.py"])
-
+        elif sub_algorithm == "Quick Hull":
+            subprocess.run(["python", "D:/Documents/University/Fall_23/Algorithms Project/alpha_algo/QuickHull.py"])
+        elif sub_algorithm == "Monotone Chain":
+            subprocess.run(["python", "D:/Documents/University/Fall_23/Algorithms Project/alpha_algo/MonotoneChain.py"])
+            
     def run_line_intersection(self, sub_algorithm):
         if sub_algorithm == "Parametric":
             subprocess.run(["python", "D:/Documents/University/Fall_23/Algorithms Project/alpha_algo/Lineintersection_parametric.py"])
         elif sub_algorithm == "Slope":
             subprocess.run(["python", "D:/Documents/University/Fall_23/Algorithms Project/alpha_algo/Lineintersection_slope.py"])
         elif sub_algorithm == "CCW":
-            subprocess.run(["python", "D:/Documents/University/Fall_23/Algorithms Project/alpha_algo/Lineintersection.py"])
+            subprocess.run(["python", "D:/Documents/University/Fall_23/Algorithms Project/alpha_algo/Lineintersection_ccw.py"])
 
 if __name__ == "__main__":
     root = tk.Tk()
