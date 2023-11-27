@@ -48,7 +48,7 @@ class AlgorithmRunnerApp:
         if main_choice == "convex_hull":
             sub_algorithms = ["Brute Force", "Graham Scan", "Jarvis March"]
         elif main_choice == "line_intersection":
-            sub_algorithms = ["Parametric", "Slope"]
+            sub_algorithms = ["Parametric", "Slope", "CCW"]
         else:
             sub_algorithms = []
 
@@ -77,6 +77,8 @@ class AlgorithmRunnerApp:
             subprocess.run(["python", "D:/Documents/University/Fall_23/Algorithms Project/alpha_algo/Lineintersection_parametric.py"])
         elif sub_algorithm == "Slope":
             subprocess.run(["python", "D:/Documents/University/Fall_23/Algorithms Project/alpha_algo/Lineintersection_slope.py"])
+        elif sub_algorithm == "CCW":
+            subprocess.run(["python", "D:/Documents/University/Fall_23/Algorithms Project/alpha_algo/Lineintersection.py"])
 
 if __name__ == "__main__":
     root = tk.Tk()
