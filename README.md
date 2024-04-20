@@ -1,5 +1,5 @@
 # geometric-algorithms
-Algorithm project for my 5th semester
+Geometric algorithms visualizer using python
 
 This project implements various geometric algorithms and shows their time and space complexities.
 
